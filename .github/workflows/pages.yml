@@ -1,0 +1,36 @@
+name: Publicar la web
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 * * * *' # cada hora: recoge los cambios del calendario de Outlook
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Construir desde el calendario de Outlook
+        run: python3 scripts/build.py
+        env:
+          ICS_URL: ${{ secrets.ICS_URL }}
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendario 1º Paisajismo</title>
+<meta name="description" content="Calendario no oficial de 1º de Paisajismo de la URJC (Fuenlabrada, Mañana A): clases, entregas y exámenes.">
+<meta name="theme-color" content="#f6f7f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>1º Paisajismo <span class="muted">· Mañana A</span></h1>
+    <p class="sub">URJC Fuenlabrada · curso 2026-27 · <span id="updated">cargando…</span></p>
+  </div>
+  <button class="btn primary" id="subscribe" type="button">Añadir a mi calendario</button>
+</header>
+
+<nav class="toolbar" aria-label="Vista y filtros">
+  <div class="seg" id="views" role="group" aria-label="Vista">
+    <button type="button" data-view="agenda">Agenda</button>
+    <button type="button" data-view="week">Semana</button>
+    <button type="button" data-view="month">Mes</button>
+  </div>
+  <div class="seg" id="groups" role="group" aria-label="Grupo de los martes">
+    <button type="button" data-group="0">Todos</button>
+    <button type="button" data-group="1">Grupo 1</button>
+    <button type="button" data-group="2">Grupo 2</button>
+  </div>
+  <div class="chips" id="subjects" role="group" aria-label="Asignaturas"></div>
+  <label class="check"><input type="checkbox" id="onlyKey"> Solo entregas, exámenes y obligatorias</label>
+</nav>
+
+<div class="pager" id="pager">
+  <button type="button" class="btn icon" id="prev" aria-label="Anterior">‹</button>
+  <button type="button" class="btn" id="today">Hoy</button>
+  <button type="button" class="btn icon" id="next" aria-label="Siguiente">›</button>
+  <h2 id="period"></h2>
+</div>
+
+<main id="main" aria-live="polite"></main>
+
+<footer class="foot">
+  <p>Calendario no oficial de 1º de Paisajismo (URJC Fuenlabrada, Mañana A), hecho con lo publicado en el Aula Virtual. Ante cualquier duda, manda lo que digan los profesores.</p>
+</footer>
+
+<dialog id="detail" aria-labelledby="d-title">
+  <div class="d-band" id="d-band"></div>
+  <form method="dialog" class="d-close"><button class="btn icon" aria-label="Cerrar">✕</button></form>
+  <p class="d-subj" id="d-subj"></p>
+  <h3 id="d-title"></h3>
+  <p class="d-when" id="d-when"></p>
+  <p class="d-where" id="d-where"></p>
+  <div class="badges" id="d-tags"></div>
+  <div class="d-desc" id="d-desc"></div>
+  <p class="d-src" id="d-src"></p>
+  <a class="btn" id="d-link" target="_blank" rel="noopener">Abrir en el Aula Virtual</a>
+</dialog>
+
+<dialog id="subs" aria-labelledby="s-title">
+  <form method="dialog" class="d-close"><button class="btn icon" aria-label="Cerrar">✕</button></form>
+  <h3 id="s-title">Añadir a mi calendario</h3>
+  <p>Te suscribes una vez y los cambios te llegan solos (cada calendario se actualiza a su ritmo, normalmente en unas horas).</p>
+  <div class="subs-list">
+    <a class="btn" id="s-apple">iPhone o Mac</a>
+    <a class="btn" id="s-google" target="_blank" rel="noopener">Google Calendar</a>
+    <a class="btn" id="s-outlook" target="_blank" rel="noopener">Outlook (correo de la URJC)</a>
+  </div>
+  <p class="small">O copia el enlace y añádelo como "calendario por URL" o "suscripción":</p>
+  <div class="copy">
+    <input id="s-url" readonly aria-label="Enlace del calendario">
+    <button type="button" class="btn" id="s-copy">Copiar</button>
+  </div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
