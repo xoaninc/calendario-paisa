@@ -26,7 +26,11 @@ MIN_EVENTS = 50  # por debajo de esto el calendario ha llegado mal: no se public
 BOILERPLATE = re.compile(r'\s*Calendario no oficial de 1º de Paisajismo.*?profesores\.', re.S)
 AULA_VIRTUAL = re.compile(r'\s*Aula Virtual: (\S+)\s*$')
 SOURCE = re.compile(r'\s*Fuente: (.+?)\s*$', re.S)
+KIND = re.compile(r'\s*Tipo: ([^\n]+?)\.?\s*$')
 SUBJECT = re.compile(r'^([A-Z]+(?:\+[A-Z]+)*) · ')
+# Tipo de la Agenda (lo pone public_cal.py en la descripción) → etiqueta de la web; clases y talleres no llevan
+KIND_TAG = {'Entrega': 'entrega', 'Examen': 'examen', 'Presentación': 'presentacion',
+            'Visita': 'visita', 'Sin clase': 'sinclase'}
 
 
 def fetch(url):
@@ -67,20 +71,25 @@ def parse_when(params, value):
     return d.strftime('%Y-%m-%dT%H:%M'), False
 
 
-def tags(title):
+def tags(title, kind=None):
     t = title.lower()
-    out = []
-    if 'obligatoria' in t:
-        out.append('obligatoria')
+    out = ['obligatoria'] if 'obligatoria' in t else []
+    if kind in KIND_TAG:
+        return out + [KIND_TAG[kind]]
+    if kind:
+        return out  # Clase o Taller
+    # Sin tipo en la descripción: se adivina por el título
     if 'no hay clase' in t or 'sin clase' in t:
-        out.append('sinclase')
-    elif re.search(r'examen|convocatoria|prueba escrita', t):
+        return out + ['sinclase']
+    if re.search(r'convocatoria|prueba escrita', t):
         out.append('examen')
-    elif re.search(r'entrega|pre-entrega|tarea del aula virtual', t):
+    elif re.search(r'entrega|tarea del aula virtual|preguntas de examen', t):
         out.append('entrega')
-    if re.search(r'visita|salida', t):
+    elif 'examen' in t:
+        out.append('examen')
+    if re.search(r'\b(visita|salida)\b', t):
         out.append('visita')
-    if 'presentación' in t and 'entrega' not in out:
+    if re.search(r'\bpresentaci(ón|ones)\b', t) and 'entrega' not in out:  # no «representación»
         out.append('presentacion')
     return out
 
@@ -101,6 +110,11 @@ def build_event(raw):
     m = SOURCE.search(desc)
     if m:
         source = m.group(1).rstrip('.')
+        desc = desc[:m.start()].strip()
+    kind = None
+    m = KIND.search(desc)
+    if m:
+        kind = m.group(1)
         desc = desc[:m.start()].strip()
 
     subjects = []
@@ -125,7 +139,8 @@ def build_event(raw):
         'source': source,
         'url': url,
         'group': group,
-        'tags': tags(title),
+        'kind': kind,
+        'tags': tags(title, kind),
     }
 
 
