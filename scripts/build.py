@@ -15,6 +15,8 @@ import pathlib
 import re
 import shutil
 import sys
+import time
+import urllib.error
 import urllib.request
 from zoneinfo import ZoneInfo
 
@@ -22,6 +24,7 @@ MAD = ZoneInfo('Europe/Madrid')
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 WEB = ROOT / 'web'
 MIN_EVENTS = 50  # por debajo de esto el calendario ha llegado mal: no se publica
+RETRY_WAITS = (5, 15, 30, 60, 120)  # segundos entre los intentos de descarga
 
 BOILERPLATE = re.compile(r'\s*Calendario no oficial de 1º de Paisajismo.*?profesores\.', re.S)
 AULA_VIRTUAL = re.compile(r'\s*Aula Virtual: (\S+)\s*$')
@@ -33,10 +36,23 @@ KIND_TAG = {'Entrega': 'entrega', 'Examen': 'examen', 'Presentación': 'presenta
             'Visita': 'visita', 'Sin clase': 'sinclase'}
 
 
-def fetch(url):
+def fetch(url, waits=RETRY_WAITS):
+    """Descarga el calendario; ante un fallo de red o un 5xx de Outlook espera y reintenta."""
     req = urllib.request.Request(url, headers={'User-Agent': 'calendario-paisa (GitHub Actions)'})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return r.read()
+    for attempt, wait in enumerate((*waits, None), 1):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return r.read()
+        except urllib.error.HTTPError as e:
+            if e.code < 500 and e.code != 429:  # 404, 403…: la dirección está mal, reintentar no lo arregla
+                raise
+            err = f'HTTP {e.code}'
+        except (urllib.error.URLError, OSError) as e:  # conexión cortada, red inalcanzable, tiempo agotado
+            err = str(getattr(e, 'reason', e))
+        if wait is None:
+            sys.exit(f'No se ha podido descargar el calendario tras {attempt} intentos: {err}')
+        print(f'Intento {attempt} fallido ({err}); se reintenta en {wait} s', file=sys.stderr)
+        time.sleep(wait)
 
 
 def unescape(value):
