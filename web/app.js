@@ -6,6 +6,7 @@ const SUBJECTS = {
   IPP: { name: 'Introducción a Proyectos de Paisajismo', short: 'Proyectos', color: '--c-ipp' },
   SCS: { name: 'Sostenibilidad y Compromiso Social', short: 'Sostenibilidad', color: '--c-scs' },
   HAP: { name: 'Historia de la Arquitectura y el Paisaje', short: 'Historia', color: '--c-hap' },
+  ACT: { name: 'Charlas, exposiciones y actividades', short: 'Actividades', color: '--c-act' },
 };
 const TAGS = {
   obligatoria: 'Obligatoria', examen: 'Examen', entrega: 'Entrega',
@@ -112,10 +113,12 @@ function colorStyle(codes) {
   return vars.length ? `--c:${vars[0]};${vars[1] ? `--c2:${vars[1]};` : ''}` : null;
 }
 const displayTitle = (e) => e.title.replace(/^OBLIGATORIA · /, '');
+// sin hora de fin: en las entregas es el plazo («hasta»); en charlas y actividades, la hora de inicio («a las»)
+const isActivity = (e) => e.subjects.includes('ACT');
 const subjectShort = (e) => e.subjects.map((c) => SUBJECTS[c]?.short || c).join(' + ');
 function timeLabel(e) {
   if (e.allDay) return 'Todo el día';
-  if (e.point) return `hasta ${hm(e.s)}`;
+  if (e.point) return isActivity(e) ? `a las ${hm(e.s)}` : `hasta ${hm(e.s)}`;
   return `${hm(e.s)}–${hm(e.f)}`;
 }
 function whenText(e) {
@@ -125,7 +128,7 @@ function whenText(e) {
       ? `Del ${longDay(e.s)} al ${longDay(last)}`
       : `${cap(longDay(e.s))} · todo el día`;
   }
-  return `${cap(longDay(e.s))} · ${e.point ? `hasta las ${hm(e.s)}` : `de ${hm(e.s)} a ${hm(e.f)}`}`;
+  return `${cap(longDay(e.s))} · ${e.point ? `${isActivity(e) ? 'a' : 'hasta'} las ${hm(e.s)}` : `de ${hm(e.s)} a ${hm(e.f)}`}`;
 }
 function badges(e) {
   const tags = e.tags.filter((t) => TAGS[t]);

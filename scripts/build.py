@@ -28,6 +28,7 @@ RETRY_WAITS = (5, 15, 30, 60, 120)  # segundos entre los intentos de descarga
 
 BOILERPLATE = re.compile(r'\s*Calendario no oficial de 1º de Paisajismo.*?profesores\.', re.S)
 AULA_VIRTUAL = re.compile(r'\s*Aula Virtual: (\S+)\s*$')
+KEY_LINE = re.compile(r'\s*Clave: ([\w-]+)\s*$')  # charlas y actividades (ACT): sin enlace al Aula Virtual
 SOURCE = re.compile(r'\s*Fuente: (.+?)\s*$', re.S)
 KIND = re.compile(r'\s*Tipo: ([^\n]+?)\.?\s*$')
 SUBJECT = re.compile(r'^([A-Z]+(?:\+[A-Z]+)*) · ')
@@ -121,6 +122,11 @@ def build_event(raw):
     if m:
         url, _, key = m.group(1).partition('#')
         desc = desc[:m.start()]
+    else:
+        m = KEY_LINE.search(desc)
+        if m:
+            key = m.group(1)
+            desc = desc[:m.start()]
     desc = BOILERPLATE.sub('', desc).strip()
     source = None
     m = SOURCE.search(desc)
