@@ -17,11 +17,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Construir y publicar van en dos trabajos separados, como en la plantilla oficial de GitHub Pages.
+  # Así el paquete "github-pages" ya está cerrado cuando empieza la publicación.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
       - name: Construir desde el calendario de Outlook
@@ -32,5 +31,22 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url || steps.reintento.outputs.page_url }}
+    steps:
+      # A veces la API de GitHub no encuentra el paquete recién subido
+      # ("Fetching artifact metadata failed"); se espera un minuto y se reintenta una vez.
       - id: deployment
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+      - name: Esperar antes de reintentar
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 60
+      - id: reintento
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v5
